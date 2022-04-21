@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
@@ -44,13 +45,30 @@ class TodoControllerTest(
     )
 
     @Test
-    fun `can put todo`() {
+    fun `can add new todo`() {
         mockMvc.put("/todo") {
             contentType = MediaType.APPLICATION_JSON
             content = TodoRequest(task = "test").asJsonString()
         }.andExpect {
-            status { isOk() }
+            status { isCreated() }
         }
+    }
+
+    @Test
+    fun `can update todo`(){
+        val anExistingTodoId=todoRepository.saveAll(testData).random().id
+
+        mockMvc.put("/todo"){
+            contentType=MediaType.APPLICATION_JSON
+            content=TodoRequest(
+                id=anExistingTodoId,
+                task="check if updating a task works"
+            ).asJsonString()
+        }.andExpect {
+            status { isCreated() }
+        }
+        val updatedTodo=todoRepository.findByIdOrNull(anExistingTodoId)
+        Assertions.assertThat(updatedTodo?.task).isEqualTo("check if updating a task works")
     }
 
     private fun TodoRequest.asJsonString() =
@@ -104,6 +122,14 @@ class TodoControllerTest(
                 content {
                     jsonPath("task", Matchers.containsString("cooking a meal"))
                 }
+            }
+    }
+
+    @Test
+    fun `will return 404 on unknown task id requested`() {
+        mockMvc.get("/todo/1337")
+            .andExpect {
+                status { isNotFound() }
             }
     }
 

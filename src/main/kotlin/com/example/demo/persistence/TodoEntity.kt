@@ -13,6 +13,4 @@ class TodoEntity(
     var task: String,
 
     var completed: Boolean,
-)
-
-interface TodoRepository: JpaRepository<TodoEntity, Int>
+) : AuditingEntity()

@@ -2,22 +2,33 @@ package com.example.demo.controller
 
 import com.example.demo.persistence.TodoEntity
 import com.example.demo.service.TodoService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/todo")
 class TodoController(
     private val todoService: TodoService
 ) {
-    @PutMapping
+    @PostMapping("/create")
     fun putTodo(
         @RequestBody todoRequest: TodoRequest
-    ) {
-        todoService.createOrUpdate((todoRequest.toEntity()))
+    ): ResponseEntity<Unit> {
+        val todo = todoRequest.id?.let {
+            todoService.getById(it).apply {
+                task = todoRequest.task
+                completed = todoRequest.completed
+            }
+        } ?: todoRequest.toEntity()
+        todoService.createOrUpdate(todo)
+        return ResponseEntity.status(200).build()
     }
 
     @GetMapping("/all")
-    fun getAll(): List<TodoResponse> = todoService.getAll().toResponse()
+    fun getAll() = ResponseEntity
+        .ok()
+        .body(todoService.getAll().toResponse())
 
     @GetMapping("/{id}")
     fun getOneTodo(
@@ -40,6 +51,7 @@ class TodoController(
 }
 
 data class TodoRequest(
+    val id: Int? = null,
     val task: String,
     val completed: Boolean = false
 ) {
@@ -53,10 +65,12 @@ data class TodoResponse(
     val id: Int,
     val task: String,
     val completed: Boolean,
+    val created: Date,
+    val lastUpdated: Date
 )
 
 fun TodoEntity.toResponse() =
-    TodoResponse(id, task, completed)
+    TodoResponse(id, task, completed, createdDate, modifiedDate)
 
 fun List<TodoEntity>.toResponse() =
     map { it.toResponse() }

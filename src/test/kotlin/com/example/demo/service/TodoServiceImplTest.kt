@@ -1,5 +1,6 @@
 package com.example.demo.service
 
+import com.example.demo.common.TodoNotFoundException
 import com.example.demo.persistence.TodoEntity
 import com.example.demo.repository.TodoRepository
 import com.ninjasquad.springmockk.MockkBean
@@ -56,7 +57,7 @@ class TodoServiceImplTest(
         val aTestTodo: TodoEntity = aTodo()
         every { todoRepository.findByIdOrNull(4711) } returns null
 
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
+        Assertions.assertThrows(TodoNotFoundException::class.java) {
             todoService.getById(4711)
         }
     }
