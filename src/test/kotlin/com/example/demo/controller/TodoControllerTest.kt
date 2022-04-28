@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -55,19 +56,19 @@ class TodoControllerTest(
     }
 
     @Test
-    fun `can update todo`(){
-        val anExistingTodoId=todoRepository.saveAll(testData).random().id
+    fun `can update todo`() {
+        val anExistingTodoId = todoRepository.saveAll(testData).random().id
 
-        mockMvc.put("/todo"){
-            contentType=MediaType.APPLICATION_JSON
-            content=TodoRequest(
-                id=anExistingTodoId,
-                task="check if updating a task works"
+        mockMvc.put("/todo") {
+            contentType = MediaType.APPLICATION_JSON
+            content = TodoRequest(
+                id = anExistingTodoId,
+                task = "check if updating a task works"
             ).asJsonString()
         }.andExpect {
             status { isCreated() }
         }
-        val updatedTodo=todoRepository.findByIdOrNull(anExistingTodoId)
+        val updatedTodo = todoRepository.findByIdOrNull(anExistingTodoId)
         Assertions.assertThat(updatedTodo?.task).isEqualTo("check if updating a task works")
     }
 
@@ -113,6 +114,7 @@ class TodoControllerTest(
     }
 
     @Test
+    @WithMockUser(roles = ["USER"])
     fun `can a todo by id`() {
         val persistedTestData: MutableList<TodoEntity> = todoRepository.saveAll(testData)
 
